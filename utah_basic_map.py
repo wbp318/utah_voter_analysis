@@ -1,11 +1,41 @@
-# File: utah_basic_map.py
-
 import geopandas as gpd
 import matplotlib.pyplot as plt
+import os
+import xml.etree.ElementTree as ET
+
+def check_shapefile_components(base_path):
+    extensions = ['.shp', '.shx', '.dbf', '.prj', '.cpg', '.shp.xml']
+    missing = []
+    for ext in extensions:
+        if not os.path.exists(base_path + ext):
+            missing.append(ext)
+    if missing:
+        print(f"Warning: The following shapefile components are missing: {', '.join(missing)}")
+    else:
+        print("All expected shapefile components are present.")
 
 def load_utah_counties():
-    # Load the Utah counties shapefile
-    return gpd.read_file('data/utah_counties.shp')
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    shapefile_base = os.path.join(current_dir, 'data', 'utah_counties')
+    
+    # Check for all shapefile components
+    check_shapefile_components(shapefile_base)
+    
+    # Load shapefile
+    counties = gpd.read_file(shapefile_base + '.shp')
+    
+    # Load metadata from XML if needed
+    xml_path = shapefile_base + '.shp.xml'
+    if os.path.exists(xml_path):
+        tree = ET.parse(xml_path)
+        root = tree.getroot()
+        # Here you can extract any needed metadata from the XML
+        # For example:
+        # metadata = root.find('.//metadata')
+        # if metadata is not None:
+        #     print("Metadata found in XML")
+    
+    return counties
 
 def create_utah_map(counties):
     fig, ax = plt.subplots(figsize=(12, 8))
